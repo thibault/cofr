@@ -1,10 +1,35 @@
 import click
 
 
-@click.command()
-@click.option('--as-cowboy', '-c', is_flag=True, help='Greet as a cowboy.')
-@click.argument('name', default='world', required=False)
-def main(name, as_cowboy):
-    """A simple Key-Value store encrypted with Trezor."""
-    greet = 'Howdy' if as_cowboy else 'Hello'
-    click.echo('{0}, {1}.'.format(greet, name))
+@click.group()
+def cli():
+    """Script entry point."""
+    pass
+
+
+@cli.command()
+@click.argument('key')
+@click.argument('value')
+def set(key, value):
+    u"""Set the key value."""
+    pass
+
+
+@cli.command()
+@click.argument('key')
+def get(key):
+    u"""Get the key value."""
+    pass
+
+
+@cli.command()
+def list():
+    u"""List existing keys."""
+    click.echo("list")
+
+
+@cli.command()
+@click.argument('key')
+def rm(key):
+    u"""Delete an existing key."""
+    pass
