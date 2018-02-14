@@ -1,4 +1,5 @@
 import pytest
+import shelve
 from click.testing import CliRunner
 from trezor_keyval import cli
 
@@ -8,22 +9,111 @@ def runner():
     return CliRunner()
 
 
-def test_cli(runner):
-    result = runner.invoke(cli.main)
-    assert result.exit_code == 0
-    assert not result.exception
-    assert result.output.strip() == 'Hello, world.'
+@pytest.fixture
+def shelf():
+    return {
+        'toto': 'tata',
+        'tata': 'tutu'
+    }
 
 
-def test_cli_with_option(runner):
-    result = runner.invoke(cli.main, ['--as-cowboy'])
-    assert not result.exception
-    assert result.exit_code == 0
-    assert result.output.strip() == 'Howdy, world.'
+def test_get_empty_key(runner):
+    with runner.isolated_filesystem():
+        with shelve.open('db') as db:
+            db.sync()
+
+        result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == ''
 
 
-def test_cli_with_arg(runner):
-    result = runner.invoke(cli.main, ['Thibault'])
-    assert result.exit_code == 0
-    assert not result.exception
-    assert result.output.strip() == 'Hello, Thibault.'
+def test_get_existing_key(runner, shelf):
+    with runner.isolated_filesystem():
+        with shelve.open('db') as db:
+            for key, val in shelf.items():
+                db[key] = val
+
+        result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == 'tata'
+
+
+def test_set_key(runner):
+    with runner.isolated_filesystem():
+        with shelve.open('db') as db:
+            db.sync()
+
+        result = runner.invoke(cli.cli, ['--file=db', 'set', 'toto', 'tata'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == ''
+
+        result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == 'tata'
+
+
+def test_key_overriding_is_forbidden(runner, shelf):
+    with runner.isolated_filesystem():
+        with shelve.open('db') as db:
+            for key, val in shelf.items():
+                db[key] = val
+
+        result = runner.invoke(cli.cli, ['--file=db', 'set', 'toto', 'tutu'])
+        assert result.exit_code == 2
+        assert result.exception
+        assert 'cannot be overriden' in result.output
+
+        result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == 'tata'
+
+
+def test_rm_existing_key(runner, shelf):
+    with runner.isolated_filesystem():
+        with shelve.open('db') as db:
+            for key, val in shelf.items():
+                db[key] = val
+
+        result = runner.invoke(cli.cli, ['--file=db', 'rm', 'toto', '--yes'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == ''
+
+        result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == ''
+
+
+def test_rm_non_existing_key(runner):
+    with runner.isolated_filesystem():
+        with shelve.open('db') as db:
+            db.sync()
+
+        result = runner.invoke(cli.cli, ['--file=db', 'rm', 'toto', '--yes'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == ''
+
+        result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == ''
+
+
+def test_list_keys(runner, shelf):
+    with runner.isolated_filesystem():
+        with shelve.open('db') as db:
+            for key, val in shelf.items():
+                db[key] = val
+
+        result = runner.invoke(cli.cli, ['--file=db', 'list'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert 'toto' in result.output
+        assert 'tata' in result.output
