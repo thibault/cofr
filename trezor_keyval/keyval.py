@@ -69,8 +69,7 @@ class KeyVal(MutableMapping):
         trezor.close()
 
     def __delitem__(self, key):
-        if key in self.store:
-            del self.store[key]
+        del self.store[key]
 
     def __iter__(self):
         return iter(self.store)

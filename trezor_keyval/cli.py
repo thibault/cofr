@@ -60,6 +60,10 @@ def get(obj, key):
     prompt='Are you sure you want to drop that key? It will be lost forever.')
 @click.pass_obj
 def rm(obj, key):
-    u"""Delete an existing key."""
+    u"""Delete an existing key.
 
-    del obj[key]
+    If the key is not present in the store, we just do nothing.
+    """
+
+    if key in obj:
+        del obj[key]
