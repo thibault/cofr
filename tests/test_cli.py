@@ -1,6 +1,7 @@
-import pytest
 import shelve
+import pytest
 from click.testing import CliRunner
+
 from trezor_keyval import cli
 
 
@@ -12,9 +13,14 @@ def runner():
 @pytest.fixture
 def shelf():
     return {
-        'toto': 'tata',
-        'tata': 'tutu'
+        'toto': b'tata',
+        'tata': b'tutu'
     }
+
+
+@pytest.fixture(autouse=True)
+def use_dummy_encoder(monkeypatch):
+    monkeypatch.setattr('trezor_keyval.keyval.ENCODER', 'Dummy')
 
 
 def test_get_empty_key(runner):
