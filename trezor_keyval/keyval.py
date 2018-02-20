@@ -26,7 +26,7 @@ class KeyVal(MutableMapping):
             encrypted_value = self.store[key]
             value = self.encoder.decrypt(key, encrypted_value).decode('utf-8')
         except KeyError:
-            value = None
+            value = u''
 
         return value
 
@@ -54,7 +54,7 @@ class KeyVal(MutableMapping):
         try:
             encrypted_value = self.store[key].decode()
         except KeyError:
-            encrypted_value = None
+            encrypted_value = u''
 
         return encrypted_value
 

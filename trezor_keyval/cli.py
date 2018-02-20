@@ -61,7 +61,7 @@ def get(obj, key, decrypt):
     else:
         value = obj.get_encrypted_value(key)
 
-    click.echo(value)
+    click.echo_via_pager(value)
 
 
 @cli.command()
