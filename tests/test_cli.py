@@ -26,6 +26,8 @@ def use_dummy_encoder(monkeypatch):
 
 
 def test_get_empty_key(runner):
+    u"""Getting an empty key must return void."""
+
     with runner.isolated_filesystem():
         with shelve.open('db') as db:
             db.sync()
@@ -37,6 +39,8 @@ def test_get_empty_key(runner):
 
 
 def test_get_existing_key(runner, shelf):
+    u"""Getting an existing key must return the value."""
+
     with runner.isolated_filesystem():
         with shelve.open('db') as db:
             for key, val in shelf.items():
@@ -49,6 +53,8 @@ def test_get_existing_key(runner, shelf):
 
 
 def test_get_raw_value(runner, shelf):
+    u"""It's possible to get the undecrypted raw value."""
+
     with runner.isolated_filesystem():
         with shelve.open('db') as db:
             for key, val in shelf.items():
@@ -62,6 +68,8 @@ def test_get_raw_value(runner, shelf):
 
 
 def test_set_key(runner):
+    u"""Test that a key can be set."""
+
     with runner.isolated_filesystem():
         with shelve.open('db') as db:
             db.sync()
@@ -78,6 +86,8 @@ def test_set_key(runner):
 
 
 def test_key_overriding_is_forbidden(runner, shelf):
+    u"""It's impossible to override an existing key."""
+
     with runner.isolated_filesystem():
         with shelve.open('db') as db:
             for key, val in shelf.items():
@@ -95,6 +105,8 @@ def test_key_overriding_is_forbidden(runner, shelf):
 
 
 def test_rm_existing_key(runner, shelf):
+    u"""It's possible to remove an existing key."""
+
     with runner.isolated_filesystem():
         with shelve.open('db') as db:
             for key, val in shelf.items():
@@ -112,6 +124,8 @@ def test_rm_existing_key(runner, shelf):
 
 
 def test_rm_non_existing_key(runner):
+    u"""Removing an unknown key does not generate any error."""
+
     with runner.isolated_filesystem():
         with shelve.open('db') as db:
             db.sync()
@@ -128,6 +142,8 @@ def test_rm_non_existing_key(runner):
 
 
 def test_list_keys(runner, shelf):
+    u"""It's possible to list existing keys."""
+
     with runner.isolated_filesystem():
         with shelve.open('db') as db:
             for key, val in shelf.items():
