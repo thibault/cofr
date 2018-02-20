@@ -1,5 +1,6 @@
 import abc
 import binascii
+import base64
 
 from trezorlib.client import TrezorClient
 from trezorlib.device import TrezorDevice
@@ -28,16 +29,16 @@ class BaseEncoder(abc.ABC):
 
 
 class DummyEncoder(BaseEncoder):
-    u"""Uses a null operation to encrypt and decrypt data.
+    u"""Uses base64 to fake encryption / decryption data.
 
-    This is only useful for the tests.
+    This is useful to run tests, when no hardware device is present.
     """
 
     def encrypt(self, key, value):
-        return value
+        return base64.b64encode(value)
 
     def decrypt(self, key, encrypted_value):
-        return encrypted_value
+        return base64.b64decode(encrypted_value)
 
 
 class TrezorEncoder(BaseEncoder):

@@ -47,11 +47,17 @@ def set(obj, key, value):
 
 @cli.command()
 @click.argument('key')
+@click.option('--decrypt/--no-decrypt', default=True)
 @click.pass_obj
-def get(obj, key):
+def get(obj, key, decrypt):
     u"""Get the key value."""
 
-    click.echo(obj[key])
+    if decrypt:
+        value = obj[key]
+    else:
+        value = obj.get_encrypted_value(key)
+
+    click.echo(value)
 
 
 @cli.command()

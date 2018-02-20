@@ -48,6 +48,16 @@ class KeyVal(MutableMapping):
     def __contains__(self, key):
         return key in self.store
 
+    def get_encrypted_value(self, key):
+        u"""Return the value as it is stored, without decryption."""
+
+        try:
+            encrypted_value = self.store[key].decode()
+        except KeyError:
+            encrypted_value = None
+
+        return encrypted_value
+
     def keys(self):
         return list(self.store.keys())
 

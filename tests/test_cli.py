@@ -13,13 +13,15 @@ def runner():
 @pytest.fixture
 def shelf():
     return {
-        'toto': b'tata',
-        'tata': b'tutu'
+        'toto': b'dGF0YQ==',  # tata
+        'tata': b'dHV0dQ==',  # tutu
     }
 
 
 @pytest.fixture(autouse=True)
 def use_dummy_encoder(monkeypatch):
+    u"""Replace real encoder with a dummy test one."""
+
     monkeypatch.setattr('trezor_keyval.keyval.ENCODER', 'Dummy')
 
 
@@ -44,6 +46,19 @@ def test_get_existing_key(runner, shelf):
         assert result.exit_code == 0
         assert not result.exception
         assert result.output.strip() == 'tata'
+
+
+def test_get_raw_value(runner, shelf):
+    with runner.isolated_filesystem():
+        with shelve.open('db') as db:
+            for key, val in shelf.items():
+                db[key] = val
+
+        result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto',
+                                         '--no-decrypt'])
+        assert result.exit_code == 0
+        assert not result.exception
+        assert result.output.strip() == 'dGF0YQ=='
 
 
 def test_set_key(runner):
