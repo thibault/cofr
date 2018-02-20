@@ -25,6 +25,9 @@ def use_dummy_encoder(monkeypatch):
     monkeypatch.setattr('trezor_keyval.keyval.ENCODER', 'Dummy')
 
 
+confirm_string = 'Please confirm the action on the device.'
+
+
 def test_get_empty_key(runner):
     u"""Getting an empty key must return void."""
 
@@ -49,7 +52,7 @@ def test_get_existing_key(runner, shelf):
         result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto'])
         assert result.exit_code == 0
         assert not result.exception
-        assert result.output.strip() == 'tata'
+        assert result.output.strip() == '{}\ntata'.format(confirm_string)
 
 
 def test_get_raw_value(runner, shelf):
@@ -77,12 +80,12 @@ def test_set_key(runner):
         result = runner.invoke(cli.cli, ['--file=db', 'set', 'toto', 'tata'])
         assert result.exit_code == 0
         assert not result.exception
-        assert result.output.strip() == ''
+        assert result.output.strip() == confirm_string
 
         result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto'])
         assert result.exit_code == 0
         assert not result.exception
-        assert result.output.strip() == 'tata'
+        assert result.output.strip() == '{}\ntata'.format(confirm_string)
 
 
 def test_key_overriding_is_forbidden(runner, shelf):
@@ -101,7 +104,7 @@ def test_key_overriding_is_forbidden(runner, shelf):
         result = runner.invoke(cli.cli, ['--file=db', 'get', 'toto'])
         assert result.exit_code == 0
         assert not result.exception
-        assert result.output.strip() == 'tata'
+        assert result.output.strip() == '{}\ntata'.format(confirm_string)
 
 
 def test_rm_existing_key(runner, shelf):

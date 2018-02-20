@@ -42,6 +42,8 @@ def set(obj, key, value):
     if key in obj:
         raise click.UsageError(
             'An existing key cannot be overriden. Remove it first.')
+
+    click.echo('Please confirm the action on the device.')
     obj[key] = value
 
 
@@ -53,6 +55,8 @@ def get(obj, key, decrypt):
     u"""Get the key value."""
 
     if decrypt:
+        if key in obj:
+            click.echo('Please confirm the action on the device.')
         value = obj[key]
     else:
         value = obj.get_encrypted_value(key)
