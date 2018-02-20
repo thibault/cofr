@@ -64,11 +64,11 @@ class TrezorEncoder(BaseEncoder):
         trezor = self.find_trezor()
         address_n = trezor.expand_path(self.BIP_ADDRESS)
 
-        decrypted_value = trezor.decrypt_keyvalue(
-            address_n, key, encrypted_value)
-        pad_index = decrypted_value.find(self.PAD_CHARACTER)
         try:
-            value = binascii.unhexlify(decrypted_value[0:pad_index])
+            decrypted_value = trezor.decrypt_keyvalue(
+                address_n, key, binascii.unhexlify(encrypted_value))
+            pad_index = decrypted_value.find(self.PAD_CHARACTER)
+            value = decrypted_value[0:pad_index]
         except binascii.Error:
             raise RuntimeError('The value is not correct hexadecimal data.')
         finally:
