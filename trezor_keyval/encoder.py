@@ -6,6 +6,26 @@ from trezorlib.client import TrezorClient
 from trezorlib.device import TrezorDevice
 
 
+def pad_pkcs7(value, pad_length):
+    u"""Implementation of the PKCS7 padding algorithm.
+
+    See https://en.wikipedia.org/wiki/Padding_(cryptography)#PKCS7
+    """
+    missing_length = pad_length - (len(value) % pad_length)
+    if missing_length == 0:
+        missing_length = pad_length
+
+    pad_value = bytes([missing_length]) * missing_length
+    return value + pad_value
+
+
+def unpad_pkcs7(value):
+    u"""Unpadding method for pkcs7 padded data."""
+
+    pad_length = value[-1]
+    return value[0:-pad_length]
+
+
 class BaseEncoder(abc.ABC):
     u"""Defines the interface for encoder classes."""
 
@@ -45,7 +65,6 @@ class TrezorEncoder(BaseEncoder):
     u"""Use a connected Trezor to encrypt / decrypt data."""
 
     BIP_ADDRESS = "m/10016'/0"
-    PAD_CHARACTER = b'\x80'  # unicode padding character
 
     def find_trezor(self):
         u"""Selects a trezor device and initialize the client."""
@@ -67,8 +86,7 @@ class TrezorEncoder(BaseEncoder):
         try:
             decrypted_value = trezor.decrypt_keyvalue(
                 address_n, key, binascii.unhexlify(encrypted_value))
-            pad_index = decrypted_value.find(self.PAD_CHARACTER)
-            value = decrypted_value[0:pad_index]
+            value = unpad_pkcs7(decrypted_value)
         except binascii.Error:
             raise RuntimeError('The value is not correct hexadecimal data.')
         finally:
@@ -84,8 +102,7 @@ class TrezorEncoder(BaseEncoder):
 
         # The value's length must be a multiple of 16.
         # Hence, we might have to pad the value.
-        pad_length = 16 - (len(value) % 16)
-        padded_value = value + (self.PAD_CHARACTER * pad_length)
+        padded_value = pad_pkcs7(value, 16)
         encrypted_value = binascii.hexlify(
             trezor.encrypt_keyvalue(address_n, key, padded_value))
         trezor.close()
