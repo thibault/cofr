@@ -19,6 +19,7 @@ data.
 One might say Cofr is the equivalent of [SotoshiLabs' official password
 manager](https://trezor.io/passwords/), with the following differences:
 
+ * you can use it to safekeep any piece of text, not just passwords;
  * it's a standalone console script, it does not come with any graphical
    interface;
  * you don't have to connect to Dropbox or Google drive to use it;
