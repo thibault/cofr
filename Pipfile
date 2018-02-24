@@ -9,6 +9,7 @@ name = "pypi"
 
 trezor = "*"
 dev = "*"
+cryptography = "*"
 
 
 [dev-packages]
