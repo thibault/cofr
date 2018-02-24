@@ -27,6 +27,8 @@ class EncryptedStore(MutableMapping):
 
         self.filename = filename
         self.master_key = self._generate_master_key()
+        self.writeback = False
+
         if os.path.exists(self.filename):
             self._dict = self._parse_file()
         else:
@@ -75,7 +77,8 @@ class EncryptedStore(MutableMapping):
     def close(self):
         """Close the file and make it unaccessible."""
 
-        self._sync()
+        if self.writeback:
+            self._sync()
         self._dict = None
 
     def __getitem__(self, key):
@@ -90,9 +93,11 @@ class EncryptedStore(MutableMapping):
 
         encrypted_value = encrypt(key, value)
         self._dict[key] = encrypted_value
+        self.writeback = True
 
     def __delitem__(self, key):
         del self._dict[key]
+        self.writeback = True
 
     def __iter__(self):
         return iter(self._dict)
