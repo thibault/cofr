@@ -3,18 +3,35 @@ import json
 from binascii import hexlify, unhexlify, Error as BinASCIIError
 from collections import MutableMapping
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.backends import default_backend
 from trezorlib.client import TrezorClient
 from trezorlib.device import TrezorDevice
 
 
-def encrypt(key, value):
-    return value
+def aes_gcm_encrypt(key, data):
+    iv = os.urandom(12)
+    cipher = Cipher(
+        algorithms.AES(key),
+        modes.GCM(iv),
+        backend=default_backend())
+    encryptor = cipher.encryptor()
+    ciphertext = encryptor.update(data) + encryptor.finalize()
+
+    result = iv + encryptor.tag + ciphertext
+    return result
 
 
-def decrypt(key, value):
-    return value
+def aes_gcm_decrypt(key, data):
+    iv = data[:12]
+    tag = data[12:28]
+    ciphertext = data[28:]
+    cipher = Cipher(
+        algorithms.AES(key),
+        modes.GCM(iv, tag),
+        backend=default_backend())
+    decryptor = cipher.decryptor()
+    text = decryptor.update(ciphertext) + decryptor.finalize()
+    return text
 
 
 class EncryptedStore(MutableMapping):
@@ -52,35 +69,20 @@ class EncryptedStore(MutableMapping):
         """Open and parse the file."""
 
         with open(self.filename, 'rb') as f:
-            iv = f.read(12)
-            tag = f.read(16)
-            cipherkey = unhexlify(self.master_key)
-            cipher = Cipher(
-                algorithms.AES(cipherkey),
-                modes.GCM(iv, tag),
-                backend=default_backend())
-            decryptor = cipher.decryptor()
+            data = f.read()
 
-            ciphertext = f.read()
-            json_data = decryptor.update(ciphertext) + decryptor.finalize()
-        return json.loads(json_data.decode())
+        key = unhexlify(self.master_key)
+        json_data = aes_gcm_decrypt(key, data).decode()
+        return json.loads(json_data)
 
     def _sync(self):
         """Write data content back to the file."""
 
-        with open(self.filename, 'wb') as f:
-            iv = os.urandom(12)
-            cipherkey = unhexlify(self.master_key)
-            cipher = Cipher(
-                algorithms.AES(cipherkey),
-                modes.GCM(iv),
-                backend=default_backend())
-            encryptor = cipher.encryptor()
-            json_data = json.dumps(self._dict).encode()
-            ciphertext = encryptor.update(json_data) + encryptor.finalize()
+        key = unhexlify(self.master_key)
+        json_data = json.dumps(self._dict).encode()
+        ciphertext = aes_gcm_encrypt(key, json_data)
 
-            f.write(iv)
-            f.write(encryptor.tag)
+        with open(self.filename, 'wb') as f:
             f.write(ciphertext)
 
     def close(self):
@@ -90,19 +92,28 @@ class EncryptedStore(MutableMapping):
             self._sync()
         self._dict = None
 
-    def __getitem__(self, key):
-        u"""Get a value from the store and return the decoded value."""
-
-        encrypted_value = self._dict['entries'][key]
-        value = self.decrypt_item(key, encrypted_value).decode()
-        return value
-
     def __setitem__(self, key, value):
         u"""Encrypt and stores a value in a file."""
 
-        encrypted_value = self.encrypt_item(key, value.encode())
-        self._dict['entries'][key] = encrypted_value
+        encrypted_nonce, encrypted_value = self.encrypt_item(
+            key, value.encode())
+        self._dict['entries'][key] = {
+            'nonce': encrypted_nonce.decode(),
+            'value': encrypted_value.decode()
+        }
         self.writeback = True
+
+    def __getitem__(self, key):
+        u"""Get a value from the store and return the decoded value."""
+
+        encrypted_nonce = self._dict['entries'][key]['nonce'].encode()
+        encrypted_value = self._dict['entries'][key]['value'].encode()
+
+        value = self.decrypt_item(
+            key,
+            encrypted_nonce,
+            encrypted_value)
+        return value.decode()
 
     def __delitem__(self, key):
         del self._dict['entries'][key]
@@ -128,40 +139,33 @@ class EncryptedStore(MutableMapping):
         trezor = TrezorClient(transport)
         return trezor
 
-    def decrypt_item(self, key, encrypted_value):
-        u"""Decrypt the given value using the connected Trezor."""
-
-        trezor = self.find_trezor()
-        address_n = trezor.expand_path(self.BIP_ADDRESS)
-        unpadder = PKCS7(16 * 8).unpadder()
-
-        try:
-            decrypted_value = trezor.decrypt_keyvalue(
-                address_n, key, unhexlify(encrypted_value))
-            value = unpadder.update(decrypted_value) + unpadder.finalize()
-        except BinASCIIError:
-            raise RuntimeError('The value is not correct hexadecimal data.')
-        finally:
-            trezor.close()
-
-        return value
-
     def encrypt_item(self, key, value):
         u"""Encrypt the given value using the connected Trezor."""
 
         trezor = self.find_trezor()
         address_n = trezor.expand_path(self.BIP_ADDRESS)
-        padder = PKCS7(16 * 8).padder()
-        nonce = hexlify(os.urandom(32))
-        key = 'Decrypt key {}?'.format(key)
-        cipherkey = trezor.encrypt_keyvalue(
-            address_n, key, nonce, ask_on_encrypt=False, ask_on_decrypt=True)
 
-        # The value's length must be a multiple of 16.
-        # Hence, we might have to pad the value.
-        padded_value = padder.update(value) + padder.finalize()
-        encrypted_value = hexlify(
-            trezor.encrypt_keyvalue(address_n, key, padded_value))
+        nonce = os.urandom(32)
+        nonce_key = 'Decrypt key {}?'.format(key)
+        encrypted_nonce = trezor.encrypt_keyvalue(
+            address_n, nonce_key, nonce, ask_on_encrypt=False,
+            ask_on_decrypt=True)
+        encrypted_value = aes_gcm_encrypt(nonce, value)
+
         trezor.close()
+        return hexlify(encrypted_nonce), hexlify(encrypted_value)
 
-        return encrypted_value
+    def decrypt_item(self, key, encrypted_nonce, encrypted_value):
+        u"""Decrypt the given value using the connected Trezor."""
+
+        trezor = self.find_trezor()
+        address_n = trezor.expand_path(self.BIP_ADDRESS)
+
+        nonce_key = 'Decrypt key {}?'.format(key)
+        nonce = bytes(trezor.decrypt_keyvalue(
+            address_n, nonce_key, unhexlify(encrypted_nonce),
+            ask_on_encrypt=False, ask_on_decrypt=True))
+        value = aes_gcm_decrypt(nonce, unhexlify(encrypted_value))
+
+        trezor.close()
+        return value
