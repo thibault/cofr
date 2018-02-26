@@ -96,6 +96,16 @@ Make sure to **backup** your store file.
                 'now, all your changes will be lost.\n\nAre you sure you want '
                 'to continue?')
 
+    def do_q(self, arg):
+        """Exits the shell."""
+
+        return self.do_quit(arg)
+
+    def do_exit(self, arg):
+        """Exits the shell."""
+
+        return self.do_quit(arg)
+
     def postloop(self):
         self.store.close()
 
