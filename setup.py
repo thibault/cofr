@@ -21,7 +21,7 @@ setup(
     install_requires=dependencies,
     entry_points={
         'console_scripts': [
-            'trezor_keyval = trezor_keyval.cli:cli',
+            'cofr = cofr.cli:cli',
         ],
     },
     classifiers=[
