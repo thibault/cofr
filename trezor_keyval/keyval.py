@@ -1,7 +1,9 @@
 import os
+import shutil
 import json
 from binascii import hexlify, unhexlify
 from collections import MutableMapping
+from tempfile import mkstemp
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from trezorlib.client import TrezorClient
@@ -96,8 +98,12 @@ class EncryptedStore(MutableMapping):
         json_data = json.dumps(self._dict).encode()
         ciphertext = aes_gcm_encrypt(key, json_data)
 
-        with open(self.filename, 'wb') as f:
+        fd, tmpfile = mkstemp()
+        with open(tmpfile, 'wb') as f:
             f.write(ciphertext)
+        os.close(fd)
+
+        shutil.move(tmpfile, self.filename)
 
     def close(self):
         """Close the file and make it unaccessible."""
