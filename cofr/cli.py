@@ -2,7 +2,7 @@ import os
 import cmd
 import click
 
-from .store import EncryptedStore
+from .store import TrezorEncryptedStore
 
 
 class CofrShell(cmd.Cmd):
@@ -111,7 +111,7 @@ def cli(filepath):
             abort=True)
 
     click.echo('Please, confirm store decryption on the device.')
-    store = EncryptedStore(filepath)
+    store = TrezorEncryptedStore(filepath)
 
     shell = CofrShell(store=store)
     shell.cmdloop()

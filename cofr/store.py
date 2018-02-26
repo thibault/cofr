@@ -14,8 +14,8 @@ AES_IV_LENGTH = 12
 AES_TAG_LENGTH = 16
 
 
-def aes_gcm_encrypt(key, data):
-    iv = os.urandom(AES_IV_LENGTH)
+def aes_gcm_encrypt(key, data, iv=None):
+    iv = iv or os.urandom(AES_IV_LENGTH)
     cipher = Cipher(
         algorithms.AES(key),
         modes.GCM(iv),
@@ -40,7 +40,7 @@ def aes_gcm_decrypt(key, data):
     return text
 
 
-class EncryptedStore(MutableMapping):
+class BaseEncryptedStore(MutableMapping):
     """An AES encrypted filebased mapping type.
 
     Instead of using the Trezor for encrypting the entire file (which could
@@ -70,20 +70,9 @@ class EncryptedStore(MutableMapping):
             }
 
     def _generate_master_key(self):
-        """Returns the key for aes file encryption.
+        """Returns the key for aes file encryption."""
 
-        To generate a unique and deterministic encryption key, we simply
-        encrypt a constant value using the Trezor.
-        """
-
-        trezor = self.find_trezor()
-        address_n = trezor.expand_path(self.BIP_ADDRESS)
-
-        key = hexlify(trezor.encrypt_keyvalue(
-            address_n, self.MASTER_ENC_KEY, self.MASTER_ENC_VAL,
-            ask_on_encrypt=True, ask_on_decrypt=True))
-
-        return key
+        return hexlify(self.MASTER_ENC_KEY)
 
     def _parse_file(self):
         """Open and parse the file."""
@@ -156,6 +145,36 @@ class EncryptedStore(MutableMapping):
 
     def __contains__(self, item):
         return item in self._dict['entries']
+
+    def encrypt_item(self, key, value):
+        u"""Encrypt the given value."""
+
+        return value
+
+    def decrypt_item(self, key, encrypted_nonce, encrypted_value):
+        u"""Decrypt the given value."""
+
+        return encrypted_value
+
+
+class TrezorEncryptedStore(BaseEncryptedStore):
+    u"""Use the Trezor hardware wallet for encryption / decryption."""
+
+    def _generate_master_key(self):
+        """Returns the key for aes file encryption.
+
+        To generate a unique and deterministic encryption key, we simply
+        encrypt a constant value using the Trezor.
+        """
+
+        trezor = self.find_trezor()
+        address_n = trezor.expand_path(self.BIP_ADDRESS)
+
+        key = hexlify(trezor.encrypt_keyvalue(
+            address_n, self.MASTER_ENC_KEY, self.MASTER_ENC_VAL,
+            ask_on_encrypt=True, ask_on_decrypt=True))
+
+        return key
 
     def find_trezor(self):
         u"""Selects a trezor device and initialize the client."""
