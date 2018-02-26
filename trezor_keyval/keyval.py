@@ -8,8 +8,12 @@ from trezorlib.client import TrezorClient
 from trezorlib.device import TrezorDevice
 
 
+AES_IV_LENGTH = 12
+AES_TAG_LENGTH = 16
+
+
 def aes_gcm_encrypt(key, data):
-    iv = os.urandom(12)
+    iv = os.urandom(AES_IV_LENGTH)
     cipher = Cipher(
         algorithms.AES(key),
         modes.GCM(iv),
@@ -22,9 +26,9 @@ def aes_gcm_encrypt(key, data):
 
 
 def aes_gcm_decrypt(key, data):
-    iv = data[:12]
-    tag = data[12:28]
-    ciphertext = data[28:]
+    iv = data[:AES_IV_LENGTH]
+    tag = data[AES_IV_LENGTH:AES_IV_LENGTH + AES_TAG_LENGTH]
+    ciphertext = data[AES_IV_LENGTH + AES_TAG_LENGTH:]
     cipher = Cipher(
         algorithms.AES(key),
         modes.GCM(iv, tag),
@@ -44,6 +48,9 @@ class EncryptedStore(MutableMapping):
 
     BIP_ADDRESS = "m/10016'/0"
     STORE_VERSION = '1'
+    MASTER_ENC_KEY = 'Unlock file?'
+    MASTER_ENC_VAL = b'\x8dX\xd4\xab\xact\x129=U\xce\xe2b\x93\x18\x80'
+    ITEM_NONCE_SIZE = 32
 
     def __init__(self, filename):
         """Initialize the structure."""
@@ -63,7 +70,14 @@ class EncryptedStore(MutableMapping):
     def _generate_master_key(self):
         """Returns the key for aes file encryption."""
 
-        return hexlify(b'toto' * 10)[:32]
+        trezor = self.find_trezor()
+        address_n = trezor.expand_path(self.BIP_ADDRESS)
+
+        key = hexlify(trezor.encrypt_keyvalue(
+            address_n, self.MASTER_ENC_KEY, self.MASTER_ENC_VAL,
+            ask_on_encrypt=True, ask_on_decrypt=True))
+
+        return key
 
     def _parse_file(self):
         """Open and parse the file."""
@@ -145,7 +159,7 @@ class EncryptedStore(MutableMapping):
         trezor = self.find_trezor()
         address_n = trezor.expand_path(self.BIP_ADDRESS)
 
-        nonce = os.urandom(32)
+        nonce = os.urandom(self.ITEM_NONCE_SIZE)
         nonce_key = 'Decrypt key {}?'.format(key)
         encrypted_nonce = trezor.encrypt_keyvalue(
             address_n, nonce_key, nonce, ask_on_encrypt=False,
