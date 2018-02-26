@@ -2,7 +2,7 @@ import os
 import cmd
 import click
 
-from .keyval import EncryptedStore
+from .store import EncryptedStore
 
 
 class CofrShell(cmd.Cmd):
