@@ -6,13 +6,13 @@ from setuptools import find_packages, setup
 dependencies = ['click']
 
 setup(
-    name='trezor_keyval',
+    name='cofr',
     version='0.1.0',
     url='https://github.com/thibault/trezor-keyval',
     license='MIT',
     author='Thibault Jouannic',
     author_email='thibault@miximum.fr',
-    description='A simple Key-Value store encrypted with Trezor.',
+    description='A simple Key-Value store encrypted with a hardware wallet.',
     long_description=__doc__,
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
