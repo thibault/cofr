@@ -95,16 +95,8 @@ Make sure to **backup** your store file.
                 'The store was modified but not synced to disk. If you exit '
                 'now, all your changes will be lost.\n\nAre you sure you want '
                 'to continue?')
-
-    def do_q(self, arg):
-        """Exits the shell."""
-
-        return self.do_quit(arg)
-
-    def do_exit(self, arg):
-        """Exits the shell."""
-
-        return self.do_quit(arg)
+    do_q = do_quit
+    do_exit = do_quit
 
     def postloop(self):
         self.store.close()
