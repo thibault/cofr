@@ -59,7 +59,7 @@ class EncryptedStore(MutableMapping):
 
         self.filename = filename
         self.master_key = self._generate_master_key()
-        self.writeback = False
+        self.synced = True
 
         if os.path.exists(self.filename):
             self._dict = self._parse_file()
@@ -91,7 +91,7 @@ class EncryptedStore(MutableMapping):
         json_data = aes_gcm_decrypt(key, data).decode()
         return json.loads(json_data)
 
-    def _sync(self):
+    def sync(self):
         """Write data content back to the file."""
 
         key = unhexlify(self.master_key)
@@ -104,13 +104,18 @@ class EncryptedStore(MutableMapping):
         os.close(fd)
 
         shutil.move(tmpfile, self.filename)
+        self.synced = True
 
     def close(self):
         """Close the file and make it unaccessible."""
 
-        if self.writeback:
-            self._sync()
         self._dict = None
+
+    @property
+    def closed(self):
+        """True if the file was already synced and closed."""
+
+        return self._dict is None
 
     def __setitem__(self, key, value):
         u"""Encrypt and stores a value in a file."""
@@ -121,7 +126,7 @@ class EncryptedStore(MutableMapping):
             'nonce': encrypted_nonce.decode(),
             'value': encrypted_value.decode()
         }
-        self.writeback = True
+        self.synced = False
 
     def __getitem__(self, key):
         u"""Get a value from the store and return the decoded value."""
@@ -137,7 +142,7 @@ class EncryptedStore(MutableMapping):
 
     def __delitem__(self, key):
         del self._dict['entries'][key]
-        self.writeback = True
+        self.synced = False
 
     def __iter__(self):
         return iter(self._dict['entries'])
