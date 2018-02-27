@@ -225,8 +225,8 @@ class TrezorEncryptedStore(BaseEncryptedStore):
 
         nonce_key = 'Decrypt key {}?'.format(key)
         nonce = bytes(trezor.decrypt_keyvalue(
-            address_n, nonce_key, encrypted_nonce),
-            ask_on_encrypt=False, ask_on_decrypt=True)
+            address_n, nonce_key, encrypted_nonce,
+            ask_on_encrypt=False, ask_on_decrypt=True))
         value = aes_gcm_decrypt(nonce, encrypted_value)
 
         trezor.close()
