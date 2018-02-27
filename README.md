@@ -36,8 +36,8 @@ kind. Use it at your own risk. See the [complete license](LICENSE.md).
 ## What is it?
 
 Cofr is a tool that lets you use your [Trezor hardware
-wallet](https://trezor.io/) to easily store some simple pieces of data in
-encrypted files.
+wallet](https://trezor.io/) to easily store some simple pieces of text in
+encrypted data files.
 
 One might say Cofr is an equivalent of [SotoshiLabs' official password
 manager](https://trezor.io/passwords/), with the following differences:
@@ -54,6 +54,8 @@ Let's say you have a very private piece of information that you want to protect
 at all costs. For example, you bought some [$NANO](https://nano.org), a
 cryptocurrency that is not supported by Trezor at the moment, and you want to
 backup your wallet seed.
+
+### Storing data
 
 Make sure your Trezor is plugged, then type in a shell:
 
@@ -77,8 +79,35 @@ Here is the list of available commands:
  * `sync`: Writes changes back to disk.
  * `quit`: Exits the shell.
 
-**Please note that your data file will not be modified until you call the
-`sync` command.**
+To store new data in the Cofr file, use the `put` command:
+
+    Cofr> put nano_wallet_seed
+    Please, provide the value for key "nano_wallet_seed": e217e2727ba080bf9fbab9c93bd8ba71eeecef3cac1dcb64c0ce4d7908712561
+    Done!
+
+**Please note that nothing will happen until you actually commit the changes
+to the Cofr file using the `sync` command.**
+
+    Cofr> sync
+    Changes written back to disk.
+
+You can then safely exit Cofr:
+
+    Cofr> quit
+    Bye!
+
+### Retrieving data
+
+Time for data retrieval. Start Cofr and give the Cofr file as a parameter, like
+you did before. Once again, you will have to manually confirm the file
+decryption on the Trezor.
+
+Then, use the `list` command to see existing keys in the Cofr file, or retrieve
+the value associated with a key using the `get` command:
+
+    Cofr> get nano_wallet_seed
+    Please, confirm key decryption on the device.
+    e217e2727ba080bf9fbab9c93bd8ba71eeecef3cac1dcb64c0ce4d7908712561
 
 ## Installation
 
@@ -111,8 +140,8 @@ responsible if anything bad happens to you because your usage of this tool.
 
 ### Ways you could lose your data
 
-Here is a list of events that might lead to you **completely** and
-**irreversibly** losing access to your secret data:
+For information purpose, here is a list of events that might lead to you
+**completely** and **irreversibly** losing access to your secret data:
 
  * The Cofr data file is erased or lost and you don't have any backup.
  * Your Trezor is lost / stolen / damaged and you don't have a backup of the
@@ -141,7 +170,8 @@ To mitigate those issues:
  * Only manipulate sensitive data on safe and trusted computers, e.g computers
    unplugged from the internet and booted on a [live linux
    system](https://tails.boum.org/).
- * Trust no one, and inspect the source code yourself.
+ * Trust no one, and inspect the source code yourself. Ask people you trust to
+   do the same.
 
 Cofr uses mathematically proven encryption methods, but if you use a tool to
 handle highly sensitive data on an unsafe computer, the amount of protection
