@@ -84,7 +84,7 @@ class BaseEncryptedStore(MutableMapping):
     def _generate_master_key(self):
         """Returns the key for aes file encryption."""
 
-        return hexlify(self.MASTER_ENC_KEY)
+        return self.MASTER_ENC_VAL
 
     def _parse_file(self):
         """Open and parse the file."""
@@ -92,14 +92,14 @@ class BaseEncryptedStore(MutableMapping):
         with open(self.filename, 'rb') as f:
             data = f.read()
 
-        key = unhexlify(self.master_key)
+        key = self.master_key
         json_data = aes_gcm_decrypt(key, data).decode()
         return json.loads(json_data)
 
     def sync(self):
         """Write data content back to the file."""
 
-        key = unhexlify(self.master_key)
+        key = self.master_key
         json_data = json.dumps(self._dict).encode()
         ciphertext = aes_gcm_encrypt(key, json_data)
 
@@ -125,11 +125,10 @@ class BaseEncryptedStore(MutableMapping):
     def __setitem__(self, key, value):
         u"""Encrypt and stores a value in a file."""
 
-        encrypted_nonce, encrypted_value = self.encrypt_item(
-            key, value.encode())
+        encrypted_nonce, encrypted_value = self.encrypt_item(key, value)
         self._dict['entries'][key] = {
-            'nonce': encrypted_nonce.decode(),
-            'value': encrypted_value.decode()
+            'nonce': hexlify(encrypted_nonce).decode(),
+            'value': hexlify(encrypted_value).decode()
         }
         self.synced = False
 
@@ -141,9 +140,9 @@ class BaseEncryptedStore(MutableMapping):
 
         value = self.decrypt_item(
             key,
-            encrypted_nonce,
-            encrypted_value)
-        return value.decode()
+            unhexlify(encrypted_nonce),
+            unhexlify(encrypted_value))
+        return value
 
     def __delitem__(self, key):
         del self._dict['entries'][key]
@@ -161,12 +160,12 @@ class BaseEncryptedStore(MutableMapping):
     def encrypt_item(self, key, value):
         u"""Encrypt the given value."""
 
-        return value
+        return key.encode(), value.encode()
 
     def decrypt_item(self, key, encrypted_nonce, encrypted_value):
         u"""Decrypt the given value."""
 
-        return encrypted_value
+        return encrypted_value.decode()
 
 
 class TrezorEncryptedStore(BaseEncryptedStore):
@@ -182,9 +181,9 @@ class TrezorEncryptedStore(BaseEncryptedStore):
         trezor = self.find_trezor()
         address_n = trezor.expand_path(self.BIP_ADDRESS)
 
-        key = hexlify(trezor.encrypt_keyvalue(
+        key = trezor.encrypt_keyvalue(
             address_n, self.MASTER_ENC_KEY, self.MASTER_ENC_VAL,
-            ask_on_encrypt=True, ask_on_decrypt=True))
+            ask_on_encrypt=True, ask_on_decrypt=True)
 
         return key
 
@@ -210,10 +209,10 @@ class TrezorEncryptedStore(BaseEncryptedStore):
         encrypted_nonce = trezor.encrypt_keyvalue(
             address_n, nonce_key, nonce, ask_on_encrypt=False,
             ask_on_decrypt=True)
-        encrypted_value = aes_gcm_encrypt(nonce, value)
+        encrypted_value = aes_gcm_encrypt(nonce, value.encode())
 
         trezor.close()
-        return hexlify(encrypted_nonce), hexlify(encrypted_value)
+        return encrypted_nonce, encrypted_value
 
     def decrypt_item(self, key, encrypted_nonce, encrypted_value):
         u"""Decrypt the given value using the connected Trezor."""
@@ -223,9 +222,9 @@ class TrezorEncryptedStore(BaseEncryptedStore):
 
         nonce_key = 'Decrypt key {}?'.format(key)
         nonce = bytes(trezor.decrypt_keyvalue(
-            address_n, nonce_key, unhexlify(encrypted_nonce),
-            ask_on_encrypt=False, ask_on_decrypt=True))
-        value = aes_gcm_decrypt(nonce, unhexlify(encrypted_value))
+            address_n, nonce_key, encrypted_nonce),
+            ask_on_encrypt=False, ask_on_decrypt=True)
+        value = aes_gcm_decrypt(nonce, encrypted_value)
 
         trezor.close()
-        return value
+        return value.decode()
