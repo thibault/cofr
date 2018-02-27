@@ -1,22 +1,45 @@
-# Cofr, a way to store encrypted text easily
+# Cofr, safely backup your sensitive data
 
-Use your Trezor to keep your secrets really secrets.
+Cofr is a tool to easily and safely use your Trezor hardware wallet to keep
+your sensitive data encrypted.
+
+Cofr data files are perfectly safe to backup on Dropbox, Google Drive or any
+other cloud service.
+
+Here's an usage example where I'm saving some cryptocurrency wallet seed:
+
+    $ cofr -f ~/Dropbox/important_data.db
+    The given file does not exist. Do you wish to create it? [y/N]: y
+    Please, confirm store decryption on the device.
+
+    Welcome to the Cofr shell. Type help or ? for command list.
+
+    This software comes with NO WARRANTY whatsoever. Use it at your own risk.
+    Make sure to **backup** your store file.
+
+    Cofr> put nano_wallet_seed
+    Please, provide the value for key "nano_wallet_seed": e217e2727ba080bf9fbab9c93bd8ba71eeecef3cac1dcb64c0ce4d7908712561
+    Done!
+    Cofr> sync
+    Changes written back to disk.
+    Cofr> quit
+    Bye!
 
 ## Warning
 
 This code is **not** officially supported by SatoshiLabs (the company behind
 Trezor).
 
-This software comes with absolutely no warantee of any kind. Use it at your own
-risk. See the [complete license](LICENSE.md).
+This software is provided "as is" and comes with absolutely no warantee of any
+kind. Use it at your own risk. See the [complete license](LICENSE.md).
 
 ## What is it?
 
 Cofr is a tool that lets you use your [Trezor hardware
-wallet](https://trezor.io/) to easily encrypt and store some simple pieces of
-data.
+wallet](https://trezor.io/) to easily store some simple pieces of data in
+encrypted files.
 
-One might say Cofr is the equivalent of [SotoshiLabs' official password
+One might say Cofr is an equivalent of [SotoshiLabs' official password
 manager](https://trezor.io/passwords/), with the following differences:
 
  * you can use it to safekeep any piece of text, not just passwords;
@@ -25,56 +48,60 @@ manager](https://trezor.io/passwords/), with the following differences:
  * you don't have to connect to Dropbox or Google drive to use it;
  * you can store data in a single file or multiple files;
 
-## Basic usage
+## Usage
 
 Let's say you have a very private piece of information that you want to protect
-at all costs. For example, you bought some [$nano](https://nano.org), a
+at all costs. For example, you bought some [$NANO](https://nano.org), a
 cryptocurrency that is not supported by Trezor at the moment, and you want to
 backup your wallet seed.
 
-Here is how you would do it:
+Make sure your Trezor is plugged, then type in a shell:
 
-    cofr -f ~/Dropbox/crypto.db set NANO
+    cofr -f ~/Dropbox/crypto.db
 
-You will be requested to enter the data you want to backup (your wallet seed),
-then to manually confirm action on the Trezor itself.
+If the file does not already exists, you will be prompted for confirmation. You
+also need to physically activate the file encryption on the Trezor.
 
-Your value will then be encrypted and stored in the file
-`~/Dropbox/cryptod.db`.
+Once this is done, you get access to the Cofr shell.
 
-Here, `NANO` is the « key » that you must use to retrieve your value. You can
-store different values using different keys.
+    Cofr>
 
-To get back the value, use the reverse command using the same key:
+Type in your commands to read existing data, or add new data in the store.
 
-    cofr -f ~/Dropbox/crypto.db get NANO
+Here is the list of available commands:
 
-To list all keys defined in a file:
+ * `list`: List all keys in the file.
+ * `put`: Store a new key / value in the file.
+ * `get`: Display a specific value.
+ * `del`: Removes a key from the file.
+ * `sync`: Writes changes back to disk.
+ * `quit`: Exits the shell.
 
-    cofr -f ~/Dropbox/crypto.db list
-
-To erase an existing key:
-
-    cofr -f ~/Dropbox/crypto.db rm NANO
-
-For safety reasons, it is not possible to update a key's value. You must first
-erase it an create it anew.
-
+**Please note that your data file will not be modified until you call the
+`sync` command.**
 
 ## Installation
 
 Work in progress.
 
 
-## Usage
+## Data safety, encryption, technical information
 
-For usage information, use:
+Cofr uses a double level of encryption to make sure your data is safe. First,
+each value is individually encrypted *then*, the complete file is encrypted
+before being stored on disk.
 
-    cofr --help
+It means that even if an attacker could get access to the Cofr data file, they
+would not be able to decrypt the data unless they also get their hand on your
+**Trezor wallet seed**. Cofr data files are perfectly safe to backup on
+Dropbox, Google Drive or any other cloud service, even unencrypted ones.
 
-For detailed usage about a command, use:
+The encryption used by Cofr is very similar to the one used in SatoshiLab's
+password manager, and [described in this
+document](https://github.com/satoshilabs/slips/blob/master/slip-0016.md).
 
-    cofr <command> --help
+In short, Cofr uses the Trezor to generate deterministic encryption keys, and
+then uses those keys to encrypt your data with AES-GCM.
 
 
 ## Safety considerations
@@ -82,23 +109,20 @@ For detailed usage about a command, use:
 **PLEASE READ THIS OR YOUR FUNDS WILL GET STOLEN.** We will not be held
 responsible if anything bad happens to you because your usage of this tool.
 
-Cofr implements a variation of [SatoshiLab's SLIP-0016 format for password
-storage and
-encryption](https://github.com/satoshilabs/slips/blob/master/slip-0016.md),
-meaning that it uses the exact same way of encryption that is used in the
-official Trezor password manager.
-
-Your secrets are encrypted, then stored in a encrypted file. This file SHOULD
-be safe to backup anywhere (Dropbox, Google Drive, etc.)
-
 ### Ways you could lose your data
 
 Here is a list of events that might lead to you **completely** and
 **irreversibly** losing access to your secret data:
 
- * The db file is erased or lost and you don't have any backup.
+ * The Cofr data file is erased or lost and you don't have any backup.
  * Your Trezor is lost / stolen / damaged and you don't have a backup of the
    Trezor seed.
+
+To mitigate those issues:
+
+ * Make several backups of the data files, e.g in Dropbox or subscribe to a
+   cloud-based backup service.
+ * Take every measure to make sure your Trezor seed is safe.
 
 ### Ways your data could be leaked
 
@@ -108,11 +132,20 @@ an eventual theft of your funds:
  * Your secret data was generated and or handled *before encryption* on an
    unsafe computer hosting a malware / spyware / keylogger / etc.
  * Your Trezor seed is leaked.
+ * Some malicious hacker hijacked my computer and uploaded a modified version
+   of Cofr designed to discretely upload data to a remote server.
+ * I'm a malicious hacker trying to scam you.
+
+To mitigate those issues:
+
+ * Only manipulate sensitive data on safe and trusted computers, e.g computers
+   unplugged from the internet and booted on a [live linux
+   system](https://tails.boum.org/).
+ * Trust no one, and inspect the source code yourself.
 
 Cofr uses mathematically proven encryption methods, but if you use a tool to
 handle highly sensitive data on an unsafe computer, the amount of protection
 you receive is None.
-
 
 ## Where does the name comes from?
 
