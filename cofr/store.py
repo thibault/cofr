@@ -15,6 +15,13 @@ AES_TAG_LENGTH = 16
 
 
 def aes_gcm_encrypt(key, data, iv=None):
+    """Encrypt data using AES with GCM mode.
+
+    12 first bytes of the response are the initialization vector (iv).
+    16 next bytes are the authentication tag.
+    The rest is the encrypted text.
+    """
+
     iv = iv or os.urandom(AES_IV_LENGTH)
     cipher = Cipher(
         algorithms.AES(key),
@@ -28,6 +35,11 @@ def aes_gcm_encrypt(key, data, iv=None):
 
 
 def aes_gcm_decrypt(key, data):
+    """Decrypt AES-GCM encrypted data.
+
+    Data must start with the iv and tag, as return in `aes_gcm_encrypt`.
+    """
+
     iv = data[:AES_IV_LENGTH]
     tag = data[AES_IV_LENGTH:AES_IV_LENGTH + AES_TAG_LENGTH]
     ciphertext = data[AES_IV_LENGTH + AES_TAG_LENGTH:]
