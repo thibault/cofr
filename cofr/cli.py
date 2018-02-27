@@ -42,7 +42,7 @@ Make sure to **backup** your store file.
             value = self.store[key]
             click.echo(value)
         else:
-            click('There is no such key.')
+            click.echo('There is no such key.')
 
     def do_put(self, arg):
         """Encrypt and save a value into the store."""
