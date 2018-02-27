@@ -58,6 +58,9 @@ class BaseEncryptedStore(MutableMapping):
     Instead of using the Trezor for encrypting the entire file (which could
     take some time), we use it to only generate an encryption key. Then, the
     file is encrypted / decrypted using a symmetric encryption algorithm (AES).
+
+    This base class MUST NOT be used directly. Allowing it to be instanciated
+    makes testing easier, though.
     """
 
     BIP_ADDRESS = "m/10016'/0"
