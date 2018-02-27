@@ -184,9 +184,9 @@ class TrezorEncryptedStore(BaseEncryptedStore):
         trezor = self.find_trezor()
         address_n = trezor.expand_path(self.BIP_ADDRESS)
 
-        key = trezor.encrypt_keyvalue(
+        key = bytes(trezor.encrypt_keyvalue(
             address_n, self.MASTER_ENC_KEY, self.MASTER_ENC_VAL,
-            ask_on_encrypt=True, ask_on_decrypt=True)
+            ask_on_encrypt=True, ask_on_decrypt=True))
 
         return key
 
@@ -209,9 +209,9 @@ class TrezorEncryptedStore(BaseEncryptedStore):
 
         nonce = os.urandom(self.ITEM_NONCE_SIZE)
         nonce_key = 'Decrypt key {}?'.format(key)
-        encrypted_nonce = trezor.encrypt_keyvalue(
+        encrypted_nonce = bytes(trezor.encrypt_keyvalue(
             address_n, nonce_key, nonce, ask_on_encrypt=False,
-            ask_on_decrypt=True)
+            ask_on_decrypt=True))
         encrypted_value = aes_gcm_encrypt(nonce, value.encode())
 
         trezor.close()
