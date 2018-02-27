@@ -57,7 +57,8 @@ Make sure to **backup** your store file.
                 'For safety reasons, existing keys cannot be modified.\n'
                 'Remove it first then create it anew.')
         else:
-            value = click.prompt('Please, provide the value to encrypt')
+            value = click.prompt('Please, provide the value for key'
+                                 ' "{}"'.format(key))
             self.store[key] = value
             click.echo('Done!')
 
