@@ -1,4 +1,4 @@
-# Cofr, safely backup your sensitive data
+# Cofr, make secure backups of sensitive data using your Trezor hardware wallet
 
 Cofr is a tool to easily and safely use your Trezor hardware wallet to keep
 your sensitive data encrypted.
