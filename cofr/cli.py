@@ -116,23 +116,10 @@ def cli(filepath):
             "The given file does not exist. Do you wish to create it?",
             abort=True)
 
-    # Let's make sure beforehand that the file is accessible and writeable
-    try:
-        fp = open(filepath, 'a+b')
-    except IOError as e:
-        if e.errno == errno.EACCES:
-            click.echo('The given filepath cannot be opened. Check file '
-                       'permissions.')
-            return
-        else:
-            raise
-    else:
-        fp.close()
-
     try:
         click.echo('Please, confirm file unlock on the Trezor device.')
         store = TrezorEncryptedStore(filepath)
         shell = CofrShell(store=store)
         shell.cmdloop()
-    except (NoTrezorFoundError, InvalidCofrFileError) as e:
+    except (NoTrezorFoundError, InvalidCofrFileError, PermissionError) as e:
         click.echo(e)
