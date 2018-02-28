@@ -20,6 +20,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
+    python_requires='>=3.5',
     entry_points={
         'console_scripts': [
             'cofr = cofr.cli:cli',
