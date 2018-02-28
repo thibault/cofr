@@ -4,7 +4,7 @@ import cmd
 import click
 
 from .store import TrezorEncryptedStore
-from .exceptions import NoTrezorFoundError
+from .exceptions import NoTrezorFoundError, InvalidCofrFileError
 
 
 class CofrShell(cmd.Cmd):
@@ -133,5 +133,5 @@ def cli(filepath):
         store = TrezorEncryptedStore(filepath)
         shell = CofrShell(store=store)
         shell.cmdloop()
-    except NoTrezorFoundError as e:
+    except (NoTrezorFoundError, InvalidCofrFileError) as e:
         click.echo(e)

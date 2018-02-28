@@ -9,7 +9,7 @@ from cryptography.hazmat.backends import default_backend
 from trezorlib.client import TrezorClient
 from trezorlib.device import TrezorDevice
 
-from .exceptions import NoTrezorFoundError
+from .exceptions import NoTrezorFoundError, InvalidCofrFileError
 
 
 AES_IV_LENGTH = 12
@@ -98,7 +98,11 @@ class BaseEncryptedStore(MutableMapping):
             data = f.read()
 
         key = self.master_key
-        json_data = aes_gcm_decrypt(key, data).decode()
+        try:
+            json_data = aes_gcm_decrypt(key, data).decode()
+        except ValueError:
+            raise InvalidCofrFileError('The file content does not seem to be '
+                                       'valid.')
         return json.loads(json_data)
 
     def sync(self):
