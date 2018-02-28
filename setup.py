@@ -6,8 +6,8 @@ from setuptools import find_packages, setup
 dependencies = ['cryptography', 'readline', 'trezor', 'click']
 
 setup(
-    name='Cofr',
-    version='1.0.0b1',
+    name='cofr',
+    version='1.0.0b2',
     url='https://github.com/thibault/cofr',
     license='MIT',
     author='Thibault Jouannic',
