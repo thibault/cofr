@@ -130,6 +130,7 @@ def cli(filepath):
         fp.close()
 
     try:
+        click.echo('Please, confirm file unlock on the Trezor device.')
         store = TrezorEncryptedStore(filepath)
         shell = CofrShell(store=store)
         shell.cmdloop()
