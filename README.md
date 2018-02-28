@@ -123,7 +123,7 @@ before being stored on disk.
 It means that even if an attacker could get access to the Cofr data file, they
 would not be able to decrypt the data unless they also get their hand on your
 **Trezor wallet seed**. Cofr data files are perfectly safe to backup on
-Dropbox, Google Drive or any other cloud service, even unencrypted ones.
+Dropbox, Google Drive or any other cloud service.
 
 The encryption used by Cofr is very similar to the one used in SatoshiLab's
 password manager, and [described in this
@@ -145,7 +145,8 @@ For information purpose, here is a list of events that might lead to you
 
  * The Cofr data file is erased or lost and you don't have any backup.
  * Your Trezor is lost / stolen / damaged and you don't have a backup of the
-   Trezor seed.
+   Trezor seed. Without the private key stored in the hardware wallet, the Cofr
+   file decryption *will be impossible*.
 
 To mitigate those issues:
 
