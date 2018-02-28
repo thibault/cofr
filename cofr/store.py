@@ -67,7 +67,7 @@ class BaseEncryptedStore(MutableMapping):
 
     BIP_ADDRESS = "m/10016'/0"
     STORE_VERSION = '1'
-    MASTER_ENC_KEY = 'Decrypt store file?'
+    MASTER_ENC_KEY = 'Decrypt Cofr file?'
     MASTER_ENC_VAL = b'\x8dX\xd4\xab\xact\x129=U\xce\xe2b\x93\x18\x80'
     ITEM_NONCE_SIZE = 32
 
