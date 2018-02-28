@@ -3,6 +3,7 @@ import cmd
 import click
 
 from .store import TrezorEncryptedStore
+from .exceptions import NoTrezorFoundError
 
 
 class CofrShell(cmd.Cmd):
@@ -113,8 +114,9 @@ def cli(filepath):
             "The given file does not exist. Do you wish to create it?",
             abort=True)
 
-    click.echo('Please, confirm store decryption on the device.')
-    store = TrezorEncryptedStore(filepath)
-
-    shell = CofrShell(store=store)
-    shell.cmdloop()
+    try:
+        store = TrezorEncryptedStore(filepath)
+        shell = CofrShell(store=store)
+        shell.cmdloop()
+    except NoTrezorFoundError as e:
+        click.echo(e)

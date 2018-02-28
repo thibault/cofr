@@ -9,6 +9,8 @@ from cryptography.hazmat.backends import default_backend
 from trezorlib.client import TrezorClient
 from trezorlib.device import TrezorDevice
 
+from .exceptions import NoTrezorFoundError
+
 
 AES_IV_LENGTH = 12
 AES_TAG_LENGTH = 16
@@ -195,7 +197,8 @@ class TrezorEncryptedStore(BaseEncryptedStore):
 
         devices = TrezorDevice.enumerate()
         if len(devices) == 0:
-            raise RuntimeError("No Trezor device was found.")
+            raise NoTrezorFoundError('No Trezor device was found. Make sure it'
+                                     ' is plugged.')
 
         transport = devices[0]
         trezor = TrezorClient(transport)

@@ -122,3 +122,17 @@ def test_quitting_before_syncing(capsys):
         captured = capsys.readouterr()
         assert confirm.called
         assert 'Bye!' not in captured.out
+
+
+def test_message_when_no_trezor_is_found(tmpdir, monkeypatch, capsys):
+    """When no HW can be found, inform the user with a nice message."""
+
+    filename = tmpdir.join('void.db')
+    monkeypatch.setattr('cofr.cli.click.confirm', lambda x, abort: 'y')
+
+    ctx = cli.make_context('cli', ['-f', filename])
+    with ctx:
+        cli.invoke(ctx)
+
+    captured = capsys.readouterr()
+    assert 'No Trezor device was found' in captured.out
