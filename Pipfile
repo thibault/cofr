@@ -8,9 +8,9 @@ name = "pypi"
 [packages]
 
 trezor = "*"
-dev = "*"
 cryptography = "*"
 readline = "*"
+click = "*"
 
 
 [dev-packages]
