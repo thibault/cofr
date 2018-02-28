@@ -4,7 +4,7 @@ Cofr is a tool to easily and safely use your Trezor hardware wallet to keep
 your sensitive data encrypted.
 
 Cofr data files are perfectly safe to backup on Dropbox, Google Drive or any
-other cloud service.
+other cloud service you would'nt trust otherwise.
 
 Here's an usage example where I'm saving some cryptocurrency wallet seed:
 
@@ -199,6 +199,11 @@ To mitigate those issues:
 Cofr uses mathematically proven encryption methods, but if you use a tool to
 handle highly sensitive data on an unsafe computer, the amount of protection
 you receive is None.
+
+## Issues and improvements
+
+If you want to report an issue or suggest an improvement, you can do
+so by [submitting a Github issue](https://github.com/thibault/cofr/issues).
 
 ## Where does the name comes from?
 
