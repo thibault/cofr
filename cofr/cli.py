@@ -1,4 +1,5 @@
 import os
+import errno
 import cmd
 import click
 
@@ -105,7 +106,8 @@ Make sure to **backup** your store file.
 
 
 @click.command()
-@click.option('-f', '--filepath', required=True, type=click.Path())
+@click.option('-f', '--filepath', required=True, type=click.Path(
+    readable=True, writable=True, dir_okay=False, resolve_path=True))
 def cli(filepath):
     """Script entry point. Initialize the shell."""
 
@@ -113,6 +115,19 @@ def cli(filepath):
         click.confirm(
             "The given file does not exist. Do you wish to create it?",
             abort=True)
+
+    # Let's make sure beforehand that the file is accessible and writeable
+    try:
+        fp = open(filepath, 'a+b')
+    except IOError as e:
+        if e.errno == errno.EACCES:
+            click.echo('The given filepath cannot be opened. Check file '
+                       'permissions.')
+            return
+        else:
+            raise
+    else:
+        fp.close()
 
     try:
         store = TrezorEncryptedStore(filepath)
