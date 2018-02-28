@@ -111,7 +111,29 @@ the value associated with a key using the `get` command:
 
 ## Installation
 
-Work in progress.
+Note that you need Python >= 3.5 to run Cofr.
+
+### With Pipsi (recommended)
+
+If you don't use [Pipsi](https://github.com/mitsuhiko/pipsi), you're missing
+out.
+
+    pipsi install cofr
+
+### With Pip
+
+Make sure to manually create a virtualenv before. Then:
+
+    pip install --user cofr
+
+### From source
+
+You will need [Pipenv](https://docs.pipenv.org/).
+
+    git clone https://github.com/thibault/cofr.git
+    cd cofr
+    pipenv install
+    pipenv run cofr
 
 
 ## Data safety, encryption, technical information
