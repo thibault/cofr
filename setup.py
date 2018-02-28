@@ -7,7 +7,7 @@ dependencies = ['cryptography', 'readline', 'trezor', 'click']
 
 setup(
     name='Cofr',
-    version='1.0.0-beta1',
+    version='1.0.0b1',
     url='https://github.com/thibault/cofr',
     license='MIT',
     author='Thibault Jouannic',
