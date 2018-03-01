@@ -1,13 +1,13 @@
 # Cofr, safely backup sensitive data using your Trezor wallet
 
-Cofr is a tool that helps you encrypt and backup sensitive text data, using the
-Trezor hardware wallet.
+Cofr is a standalone tool that helps you encrypt and backup sensitive text
+data, using the Trezor hardware wallet.
 
 With Cofr, you can safely store passwords, private keys or
 cryptocurrency wallet seeds and backup them on Dropbox, Google Drive or any
 other cloud service.
 
-Here's an usage sample:
+It runs in a shell. Here's an usage sample:
 
     $ cofr -f ~/Dropbox/important_and_secret_data.db
     Please, confirm store decryption on the device.
@@ -107,7 +107,7 @@ Here is the list of available commands:
  * `sync`: Write changes back to disk.
  * `quit`: Exit the shell.
 
-To store new data in the Cofr file, use the `put` command, using an item
+To store new data in the Cofr file, use the `put` command followed by the item
 identifier:
 
     Cofr> put nano_wallet_seed
@@ -134,9 +134,9 @@ data retrieval !
 Start Cofr like you did before. Once again, you will have to manually confirm
 the file decryption on the Trezor.
 
-Then, use the `list` command to see existing keys in the Cofr file, or retrieve
-the value associated with an item using the `get` command. As soon as you
-confirm the item decryption on the Trezor, it's content will appear.
+Then, use the `list` command to see existing items in the Cofr file, or
+retrieve the value associated with an item using the `get` command. As soon as
+you confirm the item decryption on the Trezor, it's content will appear.
 
     Cofr> get secret french pancake recipe
     Please, confirm key decryption on the device.
@@ -194,7 +194,7 @@ before being stored on disk. It means that even if an attacker could somehow
 get a hand on a decrypted Cofr file content, they still would need to break
 each and every one item encryption to access it.
 
-The encryption used by Cofr is very similar to the one used in SatoshiLab's
+The mechanisms used by Cofr are very similar to those used in SatoshiLab's
 password manager, and [described in this
 document](https://github.com/satoshilabs/slips/blob/master/slip-0016.md).
 
