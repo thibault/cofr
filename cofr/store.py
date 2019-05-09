@@ -6,6 +6,7 @@ from collections import MutableMapping
 from tempfile import mkstemp
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
+from trezorlib import ui, tools, misc
 from trezorlib.client import TrezorClient
 from trezorlib.device import TrezorDevice
 
@@ -188,10 +189,10 @@ class TrezorEncryptedStore(BaseEncryptedStore):
         """
 
         trezor = self.find_trezor()
-        address_n = trezor.expand_path(self.BIP_ADDRESS)
+        address_n = tools.parse_path(self.BIP_ADDRESS)
 
-        key = bytes(trezor.encrypt_keyvalue(
-            address_n, self.MASTER_ENC_KEY, self.MASTER_ENC_VAL,
+        key = bytes(misc.encrypt_keyvalue(
+            trezor, address_n, self.MASTER_ENC_KEY, self.MASTER_ENC_VAL,
             ask_on_encrypt=True, ask_on_decrypt=True))
 
         return key
@@ -205,19 +206,19 @@ class TrezorEncryptedStore(BaseEncryptedStore):
                                      ' is plugged.')
 
         transport = devices[0]
-        trezor = TrezorClient(transport)
+        trezor = TrezorClient(transport, ui=ui.ClickUI())
         return trezor
 
     def encrypt_item(self, key, value):
         u"""Encrypt the given value using the connected Trezor."""
 
         trezor = self.find_trezor()
-        address_n = trezor.expand_path(self.BIP_ADDRESS)
+        address_n = tools.parse_path(self.BIP_ADDRESS)
 
         nonce = os.urandom(self.ITEM_NONCE_SIZE)
         nonce_key = 'Decrypt key {}?'.format(key)
-        encrypted_nonce = bytes(trezor.encrypt_keyvalue(
-            address_n, nonce_key, nonce, ask_on_encrypt=False,
+        encrypted_nonce = bytes(misc.encrypt_keyvalue(
+            trezor, address_n, nonce_key, nonce, ask_on_encrypt=False,
             ask_on_decrypt=True))
         encrypted_value = aes_gcm_encrypt(nonce, value.encode())
 
@@ -228,11 +229,11 @@ class TrezorEncryptedStore(BaseEncryptedStore):
         u"""Decrypt the given value using the connected Trezor."""
 
         trezor = self.find_trezor()
-        address_n = trezor.expand_path(self.BIP_ADDRESS)
+        address_n = tools.parse_path(self.BIP_ADDRESS)
 
         nonce_key = 'Decrypt key {}?'.format(key)
-        nonce = bytes(trezor.decrypt_keyvalue(
-            address_n, nonce_key, encrypted_nonce,
+        nonce = bytes(misc.decrypt_keyvalue(
+            trezor, address_n, nonce_key, encrypted_nonce,
             ask_on_encrypt=False, ask_on_decrypt=True))
         value = aes_gcm_decrypt(nonce, encrypted_value)
 
